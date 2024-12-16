@@ -4,13 +4,19 @@ using System.Threading.Tasks;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Models.CommandInterface;
+using Amazon.Runtime;
+using credentials;
 
 namespace Services.LogsCloudWatch;
 
 public class LogsCloudWatch
 {
 
-    public static AmazonCloudWatchLogsClient client = new AmazonCloudWatchLogsClient();
+    public static AmazonCloudWatchLogsClient client = new AmazonCloudWatchLogsClient(
+            new BasicAWSCredentials(awsKeys.AwsKey, awsKeys.AwsSecretKey),
+            Amazon.RegionEndpoint.SAEast1
+        );
+
     public static string logGroupName = "ServerVoip";
 
     public async static Task<bool> verifyStreamLog(CommandInterface CallData)
@@ -77,7 +83,7 @@ public class LogsCloudWatch
         string logStreamName = $"VoipLogs-{CallData.AccountName}";
 
 
-        string sequenceToken = null;
+        string sequenceToken = "";
         var describeStreamsResponse = await DescribeLogStreamsAsync(logStreamName);
 
         if (describeStreamsResponse.LogStreams.Count > 0)
@@ -94,19 +100,23 @@ public class LogsCloudWatch
         }
         };
 
-var putLogEventsRequest = new PutLogEventsRequest{
-    LogGroupName = logGroupName,
-    LogStreamName = logStreamName,
-    LogEvents = logEvents,
-    SequenceToken = sequenceToken
-};
+        var putLogEventsRequest = new PutLogEventsRequest
+        {
+            LogGroupName = logGroupName,
+            LogStreamName = logStreamName,
+            LogEvents = logEvents,
+            SequenceToken = sequenceToken
+        };
 
-try{
-    await client.PutLogEventsAsync(putLogEventsRequest);
-    Console.WriteLine("Log Foi enviado Com Sucesso");
-}catch(Exception ex){
-    Console.WriteLine($"Erro ao enviar log: {ex.Message}");
-}
+        try
+        {
+            await client.PutLogEventsAsync(putLogEventsRequest);
+            Console.WriteLine("Log Foi enviado Com Sucesso");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao enviar log: {ex.Message}");
+        }
 
-}
+    }
 }

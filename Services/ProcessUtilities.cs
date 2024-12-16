@@ -9,20 +9,21 @@ using Services.RecordingFinder;
 using Services;
 using NAudio.Wave;
 using Helpers.Deletefile;
-
+using Services.LogsCloudWatch;
 #pragma warning disable CA1416
 
 public class ProcessUtilities
 {
-    private readonly string _localPath;
-
     public ProcessUtilities()
     {
-        _localPath = LocalPathFinder.MicrosipPath();
+        
     }
 
 public async Task<IResult> MakeCall(CommandInterface callData)
 {
+    
+    var localPath = LocalPathFinder.MicrosipPath(callData);
+
     if (string.IsNullOrEmpty(callData.Phone) || callData.Phone == "0")
     {
         return ResponseHelper.ResponseStatus("Phone is required", 400);
@@ -33,8 +34,9 @@ public async Task<IResult> MakeCall(CommandInterface callData)
         return ResponseHelper.ResponseStatus("CallId or ContactId is required", 400);
     }
 
-    if (string.IsNullOrEmpty(_localPath))
+    if (string.IsNullOrEmpty(localPath))
     {
+        await LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "The LocalPath is Null");
         return ResponseHelper.ResponseStatus("The LocalPath is Null", 400);
     }
 
@@ -43,7 +45,7 @@ public async Task<IResult> MakeCall(CommandInterface callData)
         var procStartInfo = new ProcessStartInfo
         {
             FileName = "cmd.exe",
-            Arguments = $"/c {_localPath} {callData.Phone}",
+            Arguments = $"/c {localPath} {callData.Phone}",
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden
         };
@@ -59,7 +61,7 @@ public async Task<IResult> MakeCall(CommandInterface callData)
 
         var recordingPath = RecordingsFinder.GetRecordingPath();
         await MonitorAudioFileAsync(callData, recordingPath);
-
+        await LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "The LocalPath is Null");
         return ResponseHelper.ResponseStatus("Call made", 200);
     }
     catch (Exception ex)
@@ -99,7 +101,7 @@ public async Task<IResult> MakeCall(CommandInterface callData)
             if (IsFileLocked(filePath))
             {
                 Console.WriteLine("Arquivo ainda está em uso. Aguardando liberação...");
-                await Task.Delay(2000);
+                await Task.Delay(5000);
                 continue;
             }
             if ((DateTime.Now - lastChangeTime).TotalSeconds >= 5)

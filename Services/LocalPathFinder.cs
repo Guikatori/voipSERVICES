@@ -1,13 +1,16 @@
 namespace Services;
-
+using Services.LogsCloudWatch;
 using Helpers.ResponseHelper;
+using Models.CommandInterface;
+
     public class LocalPathFinder
     {
-        public static string MicrosipPath()
+        public static string MicrosipPath(CommandInterface callData)
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string targetPath = Path.Combine(appDataPath, "MicroSIP", "microsip.exe");
 
+            string targetPath = Path.Combine(appDataPath, "MicroSIP", "microsip.exe");
+        try{
             if (File.Exists(targetPath))
             {
                 Console.WriteLine("Caminho do arquivo encontrado: " + targetPath);
@@ -18,6 +21,10 @@ using Helpers.ResponseHelper;
                 targetPath = SecondTypeOfPathVerification();
                 return targetPath;
             }
+        }catch(Exception){
+               Task.Run(() => LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "The LocalPath is Null"));
+               return string.Empty;
+        }
         }
 
         public static string SecondTypeOfPathVerification()

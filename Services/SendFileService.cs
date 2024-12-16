@@ -16,7 +16,7 @@ public static class SendFileService
 
     public static async Task<string?> MainSendFile(string filePath, string stringKeyConcat)
     {
-        s3Client = new AmazonS3Client("", "", bucketRegion);
+        s3Client = new AmazonS3Client(awsKeys.AwsKey, awsKeys.AwsSecretKey, bucketRegion);
 
         if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(stringKeyConcat))
         {
