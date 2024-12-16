@@ -2,17 +2,15 @@ using Models.CommandInterface;
 using Helpers.HashHelper;
 using Services.RecordingFinder;
 using Helpers.ResponseHelper;
-
-
 namespace Services;
-
 public static class RecordingService
 {
     public static async Task SendTheArchive(CommandInterface callData)
     {
         var recordingPath = RecordingsFinder.GetRecordingPath();
         var file = RecordingsFinder.GetLastAudioFile(recordingPath);
-        if(file == null || file.Name == null){
+        if (file == null || file.Name == null)
+        {
             ResponseHelper.ResponseStatus("the file was not found", 400);
             return;
         }
@@ -29,6 +27,3 @@ public static class RecordingService
         await RecordingCardService.PostRecording(callData, bucketUrl, recordingPath, file.Name);
     }
 }
-
-
-

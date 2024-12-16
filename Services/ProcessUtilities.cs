@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using Models.CommandInterface;
 using Helpers.ResponseHelper;
-using Helpers.DeleteAllFiles;
 using Services.RecordingFinder;
 using Services;
 using NAudio.Wave;

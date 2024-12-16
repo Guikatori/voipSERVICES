@@ -26,8 +26,9 @@ public class LogsCloudWatch
             string logStreamName = $"VoipLogs-{CallData.AccountName}";
 
             var describeStreamsResponse = await DescribeLogStreamsAsync(logStreamName);
-
-            if (!describeStreamsResponse.LogStreams.Any())
+            var describes = describeStreamsResponse.LogStreams;
+            bool hasStream = StreamExists(describes, logStreamName);
+            if (!hasStream)
             {
                 await CreateLogStream(logStreamName);
                 Console.WriteLine("Log Stream criado com sucesso.");
@@ -45,6 +46,17 @@ public class LogsCloudWatch
             return false;
         }
     }
+
+    public static bool StreamExists(List<LogStream> describes, string logStreamName){
+
+        foreach(var stream in describes){
+            if(stream.LogStreamName == logStreamName){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public static async Task<DescribeLogStreamsResponse> DescribeLogStreamsAsync(string logStreamName)
     {

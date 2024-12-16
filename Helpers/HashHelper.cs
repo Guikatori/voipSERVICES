@@ -1,6 +1,5 @@
 using System.Text;
 using System.Security.Cryptography;
-
 namespace Helpers.HashHelper;
 
 public static class HashHelper

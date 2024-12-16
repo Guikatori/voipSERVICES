@@ -1,6 +1,5 @@
 using System.Text;
 using System.Security.Cryptography;
-
 namespace Helpers.ResponseHelper;
 
 public static class ResponseHelper
@@ -9,7 +8,6 @@ public static class ResponseHelper
     {
         return statusCode >= 200 && statusCode <= 299;
     }
-
     public static IResult ResponseStatus(string message, int statusCode)
     {
         string statusMessage = IsResponseOK(statusCode) 

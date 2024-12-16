@@ -1,5 +1,4 @@
 namespace Services.RecordingFinder;
-
 public static class RecordingsFinder
 {
     public static string GetRecordingPath()
@@ -10,10 +9,13 @@ public static class RecordingsFinder
         if (!Directory.Exists(recordingPath))
         {
             recordingPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Recordings");
+            if (!Directory.Exists(recordingPath))
+            {
+                return recordingPath;
+            }
         }
         return recordingPath;
     }
-
     public static FileInfo? GetLastAudioFile(string path)
     {
 
@@ -22,8 +24,6 @@ public static class RecordingsFinder
             Console.WriteLine("Recording Path is Null");
             return null;
         }
-
-
         return new DirectoryInfo(path).GetFiles("*.mp3")
             .OrderByDescending(f => f.CreationTime)
             .FirstOrDefault();

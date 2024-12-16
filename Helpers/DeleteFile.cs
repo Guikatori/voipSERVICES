@@ -1,45 +1,42 @@
 using System;
 using System.IO;
-
 namespace Helpers.Deletefile;
 public class DeleteFiles
+{
+    public static bool Deletefile(string path, string fileName)
     {
-        public static bool Deletefile(string path, string fileName)
+        string file = Path.Combine(path, fileName);
+
+        try
         {
-            string file = Path.Combine(path, fileName);
-
-            try
+            if (File.Exists(file))
             {
-                if (File.Exists(file))
+                try
                 {
-                    try
+                    using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
                     {
-                        using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
-                        {
-                            stream.Close();
-                        }
+                        stream.Close();
                     }
-                    catch (IOException)
-                    {
-                        Console.WriteLine($"O arquivo está bloqueado: {file}. Não foi possível deletar.");
-                        return false;
-                    }
-
-                    // Deleta o arquivo
-                    File.Delete(file);
-                    Console.WriteLine("File deleted.");
-                    return true;
                 }
-                else
+                catch (IOException)
                 {
-                    Console.WriteLine("File not found");
+                    Console.WriteLine($"O arquivo está bloqueado: {file}. Não foi possível deletar.");
                     return false;
                 }
+                File.Delete(file);
+                Console.WriteLine("File deleted.");
+                return true;
             }
-            catch (IOException ioExp)
+            else
             {
-                Console.WriteLine(ioExp.Message);
+                Console.WriteLine("File not found");
                 return false;
             }
         }
+        catch (IOException ioExp)
+        {
+            Console.WriteLine(ioExp.Message);
+            return false;
+        }
     }
+}

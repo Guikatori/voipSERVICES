@@ -3,8 +3,6 @@ using Helpers.ResponseHelper;
 using Models.CommandInterface;
 using Helpers.Deletefile;
 
-
-
 public static class RecordingCardService
 {
     public static async Task PostRecording(CommandInterface callData, string bucketUrl, string recPath, string fileName)
@@ -29,24 +27,27 @@ public static class RecordingCardService
 
         var response = await client.PostAsJsonAsync("https://api2.ploomes.com/InteractionRecords", payload);
 
-        if(response.IsSuccessStatusCode){
-            ResponseHelper.ResponseStatus("The archive was post in Ploomes With Sucess",200);
-            
+        if (response.IsSuccessStatusCode)
+        {
+            ResponseHelper.ResponseStatus("The archive was post in Ploomes With Sucess", 200);
+
             bool fileDeleted = DeleteFiles.Deletefile(recPath, fileName);
-            if(fileDeleted){
-                ResponseHelper.ResponseStatus("File Deleted With Sucess",200);
-            }else{
-                ResponseHelper.ResponseStatus("File was not Deleted",404);
+            if (fileDeleted)
+            {
+                ResponseHelper.ResponseStatus("File Deleted With Sucess", 200);
             }
-        }        
-        else{
+            else
+            {
+                ResponseHelper.ResponseStatus("File was not Deleted", 404);
+            }
+        }
+        else
+        {
             ResponseHelper.ResponseStatus("The archive wasn't post in Ploomes", (int)response.StatusCode);
         }
-        
+
         Console.WriteLine(response.IsSuccessStatusCode ? "Recording posted successfully." : "Failed to post recording.");
     }
-
-
 
     public static async Task RecusedCall(CommandInterface callData)
     {
@@ -64,7 +65,7 @@ public static class RecordingCardService
             { "TypeId", 1 }
         };
 
-        var response = await client.PostAsJsonAsync("https://api2.ploomes.com/InteractionRecords", recusedPayload);      
+        var response = await client.PostAsJsonAsync("https://api2.ploomes.com/InteractionRecords", recusedPayload);
         Console.WriteLine(response.IsSuccessStatusCode ? "Recording posted successfully." : "Failed to post recording.");
     }
 

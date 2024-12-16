@@ -1,7 +1,6 @@
 using Models.CommandInterface;
 using Services;
 using System.Net.NetworkInformation;
-using Helpers.DeleteAllFiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +25,6 @@ app.MapGet("/", () => Results.Json(new { applicationStatus = true, statusCode = 
 app.MapPost("/call", (CommandInterface callData) =>
 {
     var processUtils = new ProcessUtilities();
-    DeleteAllFiles.ExcludesArch();
     return processUtils.MakeCall(callData);
     
 });
