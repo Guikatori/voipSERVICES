@@ -5,7 +5,6 @@ using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Models.CommandInterface;
 using Amazon.Runtime;
-using credentials;
 
 namespace Services.LogsCloudWatch;
 
@@ -13,7 +12,7 @@ public class LogsCloudWatch
 {
 
     public static AmazonCloudWatchLogsClient client = new AmazonCloudWatchLogsClient(
-            new BasicAWSCredentials(awsKeys.AwsKey, awsKeys.AwsSecretKey),
+            new BasicAWSCredentials("", ""),
             Amazon.RegionEndpoint.SAEast1
         );
 

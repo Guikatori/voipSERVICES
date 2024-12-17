@@ -14,10 +14,8 @@ using System.Timers;
 
 public class ProcessUtilities
 {
-    public ProcessUtilities()
-    {
+    public static TaskCompletionSource<bool> taskCs = new TaskCompletionSource<bool>();
 
-    }
 
     public async Task<IResult> MakeCall(CommandInterface callData)
     {
@@ -56,10 +54,16 @@ public class ProcessUtilities
             {
                 return ResponseHelper.ResponseStatus("Failed to start the process", 500);
             }
-
-            await Task.Delay(50000);
-
             var recordingPath = RecordingsFinder.GetRecordingPath();
+            bool fileFound = await WaitForAudioFileAsync(callData, recordingPath, TimeSpan.FromSeconds(60));
+
+            if (!fileFound)
+            {
+                Console.WriteLine("Nenhum arquivo de áudio encontrado.");
+                await RecordingCardService.RecusedCall(callData);
+                return ResponseHelper.ResponseStatus("No audio file found", 500);
+            }
+
             await MonitorAudioFileAsync(callData, recordingPath);
             await LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "The LocalPath is Null");
             return ResponseHelper.ResponseStatus("Call made", 200);
@@ -69,77 +73,113 @@ public class ProcessUtilities
             Console.WriteLine($"Error: {ex.Message}");
             return ResponseHelper.ResponseStatus(ex.Message, 400);
         }
-    }
+    }private async Task<bool> WaitForAudioFileAsync(CommandInterface callData, string directoryPath, TimeSpan timeout)
+{
+    var tcs = new TaskCompletionSource<bool>();
+    var timer = new Timer(2000) { AutoReset = true }; 
+    DateTime startTime = DateTime.Now;
 
+    var initialFiles = Directory.GetFiles(directoryPath).ToHashSet();
 
-    public static async Task<dynamic> MonitorAudioFileAsync(CommandInterface callData, string recordingPath)
+    timer.Elapsed += (sender, e) =>
     {
-        var taskCs = new TaskCompletionSource<bool>();
-        var fileInfo = RecordingsFinder.GetLastAudioFile(recordingPath);
+        var currentFiles = Directory.GetFiles(directoryPath);
 
-        if (fileInfo == null)
+        var newFile = currentFiles.FirstOrDefault(file => !initialFiles.Contains(file));
+
+        if (newFile != null)
         {
-            Console.WriteLine("Nenhum arquivo de áudio encontrado.");
-            await RecordingCardService.RecusedCall(callData);
-            taskCs.SetResult(true);
-            return taskCs.Task;
-        }
+            var creationTime = File.GetLastWriteTime(newFile);
+            Console.WriteLine($"Novo arquivo detectado: {Path.GetFileName(newFile)} - Criado em: {creationTime}");
 
-        string filePath = fileInfo.FullName;
-
-        if (!File.Exists(filePath))
-        {
-            Console.WriteLine("Arquivo não encontrado.");
-            await RecordingCardService.RecusedCall(callData);
-            taskCs.SetResult(true);
-            return taskCs.Task;
-        }
-
-        DateTime lastChangeTime = DateTime.Now;
-        var timer = new Timer(1000); 
-
-        timer.Elapsed += async (sender, e) =>
+            if (tcs.TrySetResult(true))
             {
-                if (IsFileLocked(filePath))
-                {
-                    Console.WriteLine("Arquivo ainda está em uso. Aguardando liberação...");
-                    return;
-                }
+                timer.Stop();
+                timer.Dispose();
+            }
+            return;
+        }
 
-                DateTime currentWriteTime = File.GetLastWriteTime(filePath);
+        // Timeout atingido
+        if ((DateTime.Now - startTime) >= timeout)
+        {
+            Console.WriteLine("Tempo limite atingido. Nenhum novo arquivo foi criado.");
+            if (tcs.TrySetResult(false))
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
+        }
+    };
 
-                if (currentWriteTime > lastChangeTime)
-                {
-                    lastChangeTime = currentWriteTime;
-                    Console.WriteLine($"Arquivo atualizado em: {currentWriteTime}");
-                    return;
-                }
-
-                if ((DateTime.Now - lastChangeTime).TotalSeconds >= 5)
-                {
-                    Console.WriteLine("Arquivo de áudio não teve mudanças. Finalizando...");
-
-                    timer.Stop();
-                    timer.Dispose();
-
-                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        using (var reader = new Mp3FileReader(stream))
-                        {
-                            TimeSpan duration = reader.TotalTime;
-                            Console.WriteLine($"Duração do arquivo de áudio: {duration}");
-                        }
-                    }
-
-                    await RecordingService.SendTheArchive(callData);
-                    taskCs.SetResult(true);
-                }
-            };
-
-        timer.Start();
-        return taskCs.Task;
+    timer.Start();
+    var result = await tcs.Task;
+    if (!result)
+    {
+        Console.WriteLine("Nenhum arquivo foi criado. Chamando RecordingCardService.RecusedCall...");
+        await RecordingCardService.RecusedCall(callData);
     }
 
+    return result;
+}
+
+public static async Task<dynamic> MonitorAudioFileAsync(CommandInterface callData, string recordingPath)
+{
+    var tcs = new TaskCompletionSource<bool>(); 
+    var fileInfo = RecordingsFinder.GetLastAudioFile(recordingPath);
+
+    if (fileInfo == null)
+    {
+        Console.WriteLine("Nenhum arquivo de áudio encontrado.");
+        tcs.SetResult(false);
+        return tcs.Task;
+    }
+
+    string filePath = fileInfo.FullName;
+    DateTime lastChangeTime = DateTime.Now;
+    var timer = new Timer(4000) { AutoReset = true };
+
+    timer.Elapsed += async (sender, e) =>
+    {
+        if (IsFileLocked(filePath))
+        {
+            Console.WriteLine("Arquivo ainda está em uso. Aguardando liberação...");
+            return;
+        }
+
+        DateTime currentWriteTime = File.GetLastWriteTime(filePath);
+
+        if (currentWriteTime > lastChangeTime)
+        {
+            lastChangeTime = currentWriteTime;
+            Console.WriteLine($"Arquivo atualizado em: {currentWriteTime}");
+            return;
+        }
+
+        if ((DateTime.Now - lastChangeTime).TotalSeconds >= 5)
+        {
+            Console.WriteLine("Arquivo de áudio não teve mudanças. Finalizando...");
+
+            timer.Stop();
+            timer.Dispose();
+
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = new Mp3FileReader(stream))
+            {
+                TimeSpan duration = reader.TotalTime;
+                Console.WriteLine($"Duração do arquivo de áudio: {duration}");
+            }
+
+            if (tcs.TrySetResult(true))
+            {
+                await RecordingService.SendTheArchive(callData);
+            }
+        }
+    };
+
+    timer.Start();
+    return tcs.Task;
+}
 
     private static bool IsFileLocked(string filePath)
     {
