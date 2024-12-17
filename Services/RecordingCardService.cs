@@ -46,7 +46,7 @@ public static class RecordingCardService
             ResponseHelper.ResponseStatus("The archive wasn't post in Ploomes", (int)response.StatusCode);
         }
 
-        Console.WriteLine(response.IsSuccessStatusCode ? "Recording posted successfully." : "Failed to post recording.");
+        Console.WriteLine(response.IsSuccessStatusCode ? "Process Finished." : "Failed to post recording.");
     }
 
     public static async Task RecusedCall(CommandInterface callData)
@@ -66,7 +66,7 @@ public static class RecordingCardService
         };
 
         var response = await client.PostAsJsonAsync("https://api2.ploomes.com/InteractionRecords", recusedPayload);
-        Console.WriteLine(response.IsSuccessStatusCode ? "Recording posted successfully." : "Failed to post recording.");
+        Console.WriteLine(response.IsSuccessStatusCode ? "Process Finished." : "Failed to post recording.");
     }
 
 }

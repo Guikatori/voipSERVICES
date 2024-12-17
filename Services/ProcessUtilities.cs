@@ -5,14 +5,11 @@ using System.IO;
 using Models.CommandInterface;
 using Helpers.ResponseHelper;
 using Services.RecordingFinder;
-using Services;
 using NAudio.Wave;
-using Helpers.Deletefile;
-using Services.LogsCloudWatch;
 using System.Timers;
 using Helpers.TaskCompletionSource;
 
-#pragma warning disable CA1416
+#pragma warning disable CS1998
 
 public class ProcessUtilities
 {
@@ -77,7 +74,7 @@ public class ProcessUtilities
     private static async Task<bool> WaitForAudioFileAsync(CommandInterface callData, string directoryPath, TimeSpan timeout)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var timer = new Timer(2000) { AutoReset = true };
+        var timer = new Timer(4000) { AutoReset = true };
         DateTime startTime = DateTime.Now;
 
         var initialFiles = Directory.GetFiles(directoryPath).ToHashSet();

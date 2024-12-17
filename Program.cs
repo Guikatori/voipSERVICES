@@ -1,6 +1,5 @@
 using Models.CommandInterface;
 using Services;
-using System.Net.NetworkInformation;
 
 var builder = WebApplication.CreateBuilder(args);
 

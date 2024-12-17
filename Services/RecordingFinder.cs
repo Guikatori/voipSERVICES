@@ -14,7 +14,7 @@ public static class RecordingsFinder
                 return recordingPath;
             }
         }
-        return recordingPath;
+        return string.Empty;
     }
     public static FileInfo? GetLastAudioFile(string path)
     {

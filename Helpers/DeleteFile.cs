@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 namespace Helpers.Deletefile;
 public class DeleteFiles
 {

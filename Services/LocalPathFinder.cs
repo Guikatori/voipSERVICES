@@ -1,5 +1,4 @@
 namespace Services;
-using Services.LogsCloudWatch;
 using Helpers.ResponseHelper;
 using Models.CommandInterface;
 

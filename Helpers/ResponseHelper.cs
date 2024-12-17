@@ -1,5 +1,3 @@
-using System.Text;
-using System.Security.Cryptography;
 namespace Helpers.ResponseHelper;
 
 public static class ResponseHelper
