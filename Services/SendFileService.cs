@@ -5,6 +5,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Helpers;
 using Helpers.ResponseHelper;
+using credentials;
 public static class SendFileService
 {
     public static String bucketName = "voipbucket";
@@ -12,7 +13,7 @@ public static class SendFileService
     private static IAmazonS3? s3Client;
     public static async Task<string?> MainSendFile(string filePath, string stringKeyConcat)
     {
-        s3Client = new AmazonS3Client("awsKeys.AwsKey", "awsKeys.AwsSecretKey", bucketRegion);
+        s3Client = new AmazonS3Client(awsKeys.AwsKey, awsKeys.AwsSecretKey, bucketRegion);
 
         if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(stringKeyConcat))
         {
