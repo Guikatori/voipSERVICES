@@ -1,7 +1,15 @@
 using Models.CommandInterface;
+using Models.FrontCommands;
+using WebSocket;
 using Services;
+using Services.ReconectServer;
+using Services.QuitServer;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Registrar controladores
+builder.Services.AddControllers();
 
 builder.Services.AddCors(options => options.AddPolicy("AllowAll", policy =>
     policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
@@ -19,14 +27,34 @@ bool serverStarted = false;
 var app = builder.Build();
 app.UseCors("AllowAll");
 
+app.MapControllers();  
+
 app.MapGet("/", () => Results.Json(new { applicationStatus = true, statusCode = 200 }));
 
 app.MapPost("/call", (CommandInterface callData) =>
 {
     var processUtils = new ProcessUtilities();
     return processUtils.MakeCall(callData);
-    
 });
+
+
+app.MapPost("/quit", async (FrontCommands frontCommands) =>
+{
+     await ServerQuit.QuitServer(frontCommands);
+     return;
+});
+
+
+app.MapPost("/reconect", async (FrontCommands frontCommands) =>
+{
+     ReconectServers.Reconect(frontCommands);
+     return;
+});
+
+
+
+
+Socket.openWebSocket(app, builder.Environment);
 
 while (attempt < maxAttempts)
 {
@@ -35,7 +63,7 @@ while (attempt < maxAttempts)
         Console.WriteLine($"Tentativa {attempt + 1} de iniciar o servidor...");
         app.Run();
         serverStarted = true;
-        break; 
+        break;
     }
     catch (IOException ex)
     {
@@ -44,16 +72,16 @@ while (attempt < maxAttempts)
 
         if (attempt > 15)
         {
-            delayTime *= 2; 
+            delayTime *= 2;
         }
 
         Console.WriteLine($"Tentando novamente em {delayTime / 1000} segundos...");
-        await Task.Delay(delayTime); 
+        await Task.Delay(delayTime);
     }
     catch (Exception ex)
     {
         Console.WriteLine($"Erro inesperado: {ex.Message}");
-        break; 
+        break;
     }
 }
 

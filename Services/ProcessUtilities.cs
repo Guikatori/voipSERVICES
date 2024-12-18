@@ -50,7 +50,7 @@ public class ProcessUtilities
             {
                 return ResponseHelper.ResponseStatus("Failed to start the process", 500);
             }
-            var recordingPath = RecordingsFinder.GetRecordingPath();
+            var recordingPath = RecordingsFinder.GetRecordingPath(callData);
             bool fileFound = await WaitForAudioFileAsync(callData, recordingPath, TimeSpan.FromSeconds(40));
 
             if (!fileFound)
@@ -61,7 +61,6 @@ public class ProcessUtilities
             }
 
             await MonitorAudioFileAsync(callData, recordingPath);
-            await LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "The LocalPath is Null");
             return ResponseHelper.ResponseStatus("Call made", 200);
         }
         catch (Exception ex)

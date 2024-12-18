@@ -21,7 +21,7 @@ using Models.CommandInterface;
                 return targetPath;
             }
         }catch(Exception){
-               Task.Run(() => LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "The LocalPath is Null"));
+               Task.Run(() => LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "Critical: Is not Possible to Find The Microsip"));
                return string.Empty;
         }
         }

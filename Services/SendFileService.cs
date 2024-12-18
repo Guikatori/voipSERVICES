@@ -5,12 +5,14 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Helpers.ResponseHelper;
 using credentials;
+using Models.CommandInterface;
+
 public static class SendFileService
 {
     public static String bucketName = "voipbucket";
     private static RegionEndpoint bucketRegion = RegionEndpoint.SAEast1;
     private static IAmazonS3? s3Client;
-    public static async Task<string?> MainSendFile(string filePath, string stringKeyConcat)
+    public static async Task<string?> MainSendFile(CommandInterface callData, string filePath, string stringKeyConcat)
     {
         s3Client = new AmazonS3Client(awsKeys.AwsKey, awsKeys.AwsSecretKey, bucketRegion);
 
@@ -32,11 +34,13 @@ public static class SendFileService
         catch (AmazonS3Exception ex)
         {
             ResponseHelper.ResponseStatus($"AWS S3 Error: {ex.Message}", 400);
+            await LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "Critical: Aws Error");
             return string.Empty;
         }
         catch (Exception ex)
         {
             ResponseHelper.ResponseStatus($"Unexpected Error: {ex.Message}", 400);
+            await LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "Critical: Aws Error");
             return string.Empty;
         }
     }

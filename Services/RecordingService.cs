@@ -7,7 +7,7 @@ public static class RecordingService
 {
     public static async Task SendTheArchive(CommandInterface callData)
     {
-        var recordingPath = RecordingsFinder.GetRecordingPath();
+        var recordingPath = RecordingsFinder.GetRecordingPath(callData);
         var file = RecordingsFinder.GetLastAudioFile(recordingPath);
         if (file == null || file.Name == null)
         {
@@ -22,7 +22,7 @@ public static class RecordingService
             return;
         }
         var keyName = HashHelper.GenerateFileKey(file.Name);
-        await SendFileService.MainSendFile(archivePath, keyName);
+        await SendFileService.MainSendFile(callData, archivePath, keyName);
         var bucketUrl = $"https://voipbucket.s3.sa-east-1.amazonaws.com/{keyName}";
         await RecordingCardService.PostRecording(callData, bucketUrl, recordingPath, file.Name);
     }
