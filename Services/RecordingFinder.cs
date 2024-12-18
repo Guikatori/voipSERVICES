@@ -13,11 +13,11 @@ public static class RecordingsFinder
             recordingPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Recordings");
             if (!Directory.Exists(recordingPath))
             {
-                Task.Run(() => LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "Critical: Is not Possible to Find The Recordings Folder"));
-                return string.Empty;
+                Task.Run(() => LogsCloudWatch.LogsCloudWatch.SendLogs(callData, "Critical: Is not Possible to Find The Recordings"));
+                return recordingPath;
             }
         }
-        return string.Empty;
+        return recordingPath;
     }
     public static FileInfo? GetLastAudioFile(string path)
     {
